@@ -1,0 +1,72 @@
+---
+- name: Configure LVM
+  hosts: host1
+  become: yes
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    - name: Install LVM2
+      ansible.builtin.package:
+        name: lvm2
+        state: present
+        update_cache: yes
+
+    - name: Create a new pratition on disk
+      community.general.parted:
+        device: "{{ new_disk }}"
+        number: 1
+        state: present
+
+    - name: Create VG
+      community.general.lvg:
+        vg: "{{ vg_name }}"
+        pvs: "{{ new_disk }}1"
+
+    - name: Create LV for /var
+      community.general.lvol:
+        vg: "{{ vg_name }}"
+        lv: "{{ lv_name }}"
+        size: "{{ lv_size }}"
+
+    - name: Format LV as ext4
+      ansible.builtin.filesystem:
+        fstype: "{{ fs_type }}"
+        dev: "{{ disk_path }}"
+
+    - name: Mount LV Temporarily
+      ansible.builtin.mount:
+        path: "/mnt/newvar"
+        src: "{{ disk_path }}"
+        fstype: "{{ fs_type }}"
+        state: ephemeral
+
+    - name: Sync var data with volume
+      ansible.builtin.command: rsync -av "{{ mount_point }}/" /mnt/newvar/
+      notify:
+        - Unmount temp volume
+
+    - name: Mount LV with /var
+      ansible.builtin.mount:
+        path: "{{ mount_point }}"
+        src: "{{ disk_path }}"
+        fstype: "{{ fs_type }}"
+        opts: defaults,nofail
+        dump: "0"
+        passno: "2"
+        state: mounted
+      notify:
+        - Restart rsyslog service
+
+  handlers:
+
+    - name: Unmount temp volume
+      ansible.builtin.mount:
+        path: "/mnt/newvar"
+        state: unmounted
+
+    - name: Restart rsyslog service
+      ansible.builtin.service:
+        name: rsyslog
+        state: restarted

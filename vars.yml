@@ -1,0 +1,7 @@
+new_disk:     /dev/sdb
+vg_name:      vg_var
+lv_name:      lv_var
+disk_path:    /dev/{{ vg_name }}/{{ lv_name }}
+mount_point:  /var
+fs_type:      ext4
+lv_size:      100%VG
