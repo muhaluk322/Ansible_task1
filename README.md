@@ -25,7 +25,7 @@ It is required to develop a code (Configuration as a Code) using any tool from t
 1. **Prepare Your Inventory**: Update the IP address of your VM's host in the inventory file. Copy the SSH key to your target machine using:
 `ssh-copy-id <IP>`
 
-2. **Disk Preparation**: Attach a disk of at least 10GB to your VM. Verify the disk name in the system (likely `/dev/sdb` for a second disk) and update it in `vars.yml` using `lsblk`.
+2. **Disk Preparation**: Attach a disk of at least 10GB to your VM. Verify the disk name in the system  using `lsblk`(likely `/dev/sdb` for a second disk) and update it in `vars.yml`.
 
 3. **Run the Ansible Playbook**:
 Execute the playbook with the following command:
